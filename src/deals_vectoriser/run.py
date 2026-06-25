@@ -13,7 +13,8 @@ from __future__ import annotations
 import argparse
 from datetime import date, timedelta
 
-from rich.console import Console
+from rich.console import Console, Group
+from rich.live import Live
 from rich.progress import (
     BarColumn,
     MofNCompleteColumn,
@@ -21,6 +22,7 @@ from rich.progress import (
     TextColumn,
     TimeElapsedColumn,
 )
+from rich.text import Text
 
 from .config import DEFAULT_LOOKBACK_DAYS, EMBED_DIM, EMBED_MODEL
 from .deal_text import compose
@@ -70,17 +72,20 @@ def run(since_days: int, limit: int | None = None, skip_embed: bool = False) -> 
         records: list[dict] = []
         skipped = 0
         cache: dict = {}
-        with _progress() as prog:
-            task = prog.add_task("[bold]\\[2/4][/bold] parse + enrich", total=len(stubs))
+        prog = _progress()
+        # static description -> bar stays fixed; current name lives on its own line below.
+        task = prog.add_task("[bold]\\[2/4][/bold] parse + enrich", total=len(stubs))
+        name_line = Text("", style="dim cyan")
+        with Live(Group(prog, name_line), console=console, refresh_per_second=12):
             for stub in stubs:
                 try:
                     rec = parse_filing(sec, stub)
                     enrich_issuer(sec, rec, cache)
                     records.append(rec)
-                    prog.update(task, description=f"[bold]\\[2/4][/bold] {rec.get('entity_name', '')[:38]}")
+                    name_line.plain = f"   → {rec.get('entity_name') or stub['accession']}"
                 except Exception as ex:
                     skipped += 1
-                    prog.console.print(f"  [red]skip[/red] {stub['accession']}: {type(ex).__name__}: {ex}")
+                    name_line.plain = f"   skip {stub['accession']}: {type(ex).__name__}"
                 prog.advance(task)
     console.print(f"[bold]\\[2/4][/bold] parsed [green]{len(records)}[/green] filings" + (f", [yellow]{skipped}[/yellow] skipped" if skipped else ""))
 
@@ -90,11 +95,13 @@ def run(since_days: int, limit: int | None = None, skip_embed: bool = False) -> 
 
     # 2. Store (bar advances through each table sub-step).
     db = get_client()
-    with _progress() as prog:
-        task = prog.add_task("[bold magenta]\\[3/4][/bold magenta] store", total=4)
+    prog = _progress()
+    task = prog.add_task("[bold magenta]\\[3/4][/bold magenta] store", total=4)
+    store_line = Text("", style="dim magenta")
+    with Live(Group(prog, store_line), console=console, refresh_per_second=12):
 
         def _step(label: str) -> None:
-            prog.update(task, description=f"[bold magenta]\\[3/4][/bold magenta] store · {label}")
+            store_line.plain = f"   → {label}"
             prog.advance(task)
 
         counts = load(records, client=db, on_step=_step)
