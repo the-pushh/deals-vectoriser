@@ -19,6 +19,12 @@ EFTS_SEARCH_URL = "https://efts.sec.gov/LATEST/search-index"
 ARCHIVES_BASE = "https://www.sec.gov/Archives/edgar/data"
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 
+# --- Embeddings (OpenRouter, OpenAI-compatible) ---
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+EMBED_MODEL = os.getenv("EMBED_MODEL", "openai/text-embedding-3-small")
+EMBED_DIM = int(os.getenv("EMBED_DIM", "1536"))
+
 # --- Paths ---
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "data"
