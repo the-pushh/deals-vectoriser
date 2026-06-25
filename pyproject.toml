@@ -1,0 +1,25 @@
+[project]
+name = "deals-vectoriser"
+version = "0.1.0"
+description = "Scrape SEC Form D private-investment filings, store in Supabase, and vectorise for semantic search"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27",
+    "lxml>=5.0",
+    "tenacity>=8.0",
+    "python-dotenv>=1.0",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+# added in later stages
+db = ["supabase>=2.0"]
+embed = ["openai>=1.0"]
+web = ["fastapi>=0.110", "uvicorn>=0.29"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
