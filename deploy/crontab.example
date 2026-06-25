@@ -1,0 +1,14 @@
+# deals-vectoriser — daily pipeline cron entry.
+#
+# STATUS: DISABLED. This file is just a template; nothing runs until you
+# install it into your crontab. To enable:
+#
+#   crontab -e
+#   # paste the line below (without the leading '#'), save, quit.
+#   # verify with:  crontab -l
+#
+# To disable again: crontab -e and delete the line (or `crontab -r` to clear all).
+#
+# Runs daily at 13:00 local (after morning SEC filings post). Logs appended.
+#
+# 0 13 * * * /Users/pushh/Developer/deals-vectoriser/scripts/run.sh 2 >> /Users/pushh/Developer/deals-vectoriser/data/cron.log 2>&1

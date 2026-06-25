@@ -56,18 +56,29 @@ def _filing_row(rec: dict) -> dict:
     return row
 
 
-def load(records: list[dict], client: Client | None = None) -> dict:
-    """Upsert issuers + filings; replace child rows. Returns counts."""
+def load(records: list[dict], client: Client | None = None, on_step=None) -> dict:
+    """Upsert issuers + filings; replace child rows. Returns counts.
+
+    on_step(label): optional callback fired before each sub-operation so callers
+    can render progress.
+    """
     client = client or get_client()
 
+    def step(label: str) -> None:
+        if on_step:
+            on_step(label)
+
     # Issuers first (filings FK-reference them); dedupe by CIK.
+    step("issuers")
     issuers = {r["cik"]: _issuer_row(r) for r in records}
     client.table("issuers").upsert(list(issuers.values()), on_conflict="cik").execute()
 
+    step("filings")
     filings = [_filing_row(r) for r in records]
     client.table("filings").upsert(filings, on_conflict="accession_number").execute()
 
     # Children have surrogate keys -> delete-then-insert per accession for idempotency.
+    step("related_persons")
     accs = [r["accession_number"] for r in records]
     client.table("related_persons").delete().in_("accession_number", accs).execute()
     client.table("recipients").delete().in_("accession_number", accs).execute()
