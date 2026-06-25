@@ -12,10 +12,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# added in later stages
 db = ["supabase>=2.0"]
 embed = ["openai>=1.0"]
-web = ["fastapi>=0.110", "uvicorn>=0.29"]
+tui = ["prompt_toolkit>=3.0"]
 
 [build-system]
 requires = ["setuptools>=68"]
